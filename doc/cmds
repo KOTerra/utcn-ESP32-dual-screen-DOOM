@@ -1,0 +1,91 @@
+Ah — we are running into the **classic ESP-IDF “toolchain mismatch” problem**. The error clearly says:
+
+```
+CMAKE_TOOLCHAIN_FILE 'vcpkg' does not match currently selected IDF_TARGET 'esp32s3'
+```
+
+This means **CMake is still trying to use `vcpkg` as the toolchain**, which is incompatible with `esp32s3`.
+
+Even though you deleted the build folder and sdkconfig, **the environment still has a `CMAKE_TOOLCHAIN_FILE` or cached CMake configuration pointing to `vcpkg`**.
+
+Here’s a step-by-step fix that should solve it completely:
+
+---
+
+### 1️⃣ Close VSCode / PowerShell
+
+Sometimes old environment variables persist. Close all instances.
+
+---
+
+### 2️⃣ Open a fresh PowerShell and run the ESP-IDF environment script:
+
+```powershell
+& 'C:\Users\miche\.vscode\extensions\espressif.esp-idf-extension-1.10.2\export.ps1'
+```
+
+This ensures only ESP-IDF paths are active.
+
+---
+
+### 3️⃣ Remove all build caches and old configuration
+
+```powershell
+Remove-Item -Recurse -Force "D:\FACULTATE\facultate\anul3\sem1\PMP\proiect\utcn-microprocessor-programming-esp32-doom\build"
+Remove-Item -Force "D:\FACULTATE\facultate\anul3\sem1\PMP\proiect\utcn-microprocessor-programming-esp32-doom\sdkconfig" -ErrorAction SilentlyContinue
+Remove-Item -Force "D:\FACULTATE\facultate\anul3\sem1\PMP\proiect\utcn-microprocessor-programming-esp32-doom\sdkconfig.old" -ErrorAction SilentlyContinue
+```
+
+---
+
+### 4️⃣ Remove any lingering toolchain environment variable
+
+Check if `CMAKE_TOOLCHAIN_FILE` is set:
+
+```powershell
+Get-ChildItem Env:CMAKE_TOOLCHAIN_FILE
+```
+
+If it exists, remove it:
+
+```powershell
+Remove-Item Env:CMAKE_TOOLCHAIN_FILE
+```
+
+Also clear `IDF_TARGET` if present:
+
+```powershell
+Remove-Item Env:IDF_TARGET
+```
+
+---
+
+### 5️⃣ Explicitly set the target **after cleaning everything**
+
+```powershell
+idf.py set-target esp32s3
+```
+
+It should generate a **fresh sdkconfig** and **CMake files** without referencing vcpkg.
+
+---
+
+### 6️⃣ Build
+
+```powershell
+idf.py build
+```
+
+---
+
+💡 **Important Notes**:
+
+* `vcpkg` is **not needed** for standard ESP32/ESP32-S3 projects — it only comes into play if you were building a CMake project with external dependencies via vcpkg.
+* If any CMake cache file exists (like `CMakeCache.txt`), it will continue to reference the old toolchain. That’s why deleting `build/` completely is necessary.
+* Always run the **ESP-IDF export script** in a fresh shell before building.
+
+---
+
+If you want, I can provide a **single PowerShell snippet** that fully wipes the environment, cleans everything, resets target, and starts a clean build. This guarantees no more `vcpkg` toolchain errors.
+
+Do you want me to do that?

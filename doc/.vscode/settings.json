@@ -1,0 +1,18 @@
+{
+  "cmake.configureEnvironment": {
+    "CMAKE_TOOLCHAIN_FILE": ""
+  },
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "idf.espIdfPathWin": "C:\\Users\\miche\\esp\\v5.5.1\\esp-idf",
+  "idf.toolsPathWin": "C:\\Users\\miche\\.espressif",
+  "idf.pythonInstallPath": "C:\\Users\\miche\\.espressif\\tools\\idf-python\\3.11.2\\python.exe",
+  "cmake.sourceDirectory": "C:\\Users\\miche\\Desktop\\esp32-doom",
+  "idf.flashType": "UART",
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32"
+  },
+  "idf.portWin": "COM3"
+}
