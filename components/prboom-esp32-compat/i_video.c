@@ -43,7 +43,6 @@
 #include "r_draw.h"
 #include "d_main.h"
 #include "d_event.h"
-#include "gamepad.h"
 #include "i_video.h"
 #include "z_zone.h"
 #include "s_sound.h"
@@ -52,30 +51,24 @@
 #include "st_stuff.h"
 #include "lprintf.h"
 
-#include "rom/ets_sys.h"
-#include "spi_lcd.h"
+#include "esp_heap_caps.h"
 
-#include "esp_heap_alloc_caps.h"
+#include "i80_lcd.h"
+
 
 int use_fullscreen=0;
 int use_doublebuffer=0;
-
+int usejoystick=0;
+int joyleft, joyright, joyup, joydown;
 
 void I_StartTic (void)
 {
-	gamepadPoll();
 }
 
 
-static void I_InitInputs(void)
-{
-}
-
-
-
-static void I_UploadNewPalette(int pal)
-{
-}
+//static void I_UploadNewPalette(int pal)
+//{
+//}
 
 //////////////////////////////////////////////////////////////////////////////
 // Graphics API
@@ -99,8 +92,8 @@ void I_StartFrame (void)
 
 int I_StartDisplay(void)
 {
-	spi_lcd_wait_finish();
-  return true;
+//	spi_lcd_wait_finish();
+    return true;
 }
 
 void I_EndDisplay(void)
@@ -109,7 +102,6 @@ void I_EndDisplay(void)
 
 
 
-static uint16_t *screena, *screenb;
 
 
 //
@@ -118,35 +110,20 @@ static uint16_t *screena, *screenb;
 
 void I_FinishUpdate (void)
 {
-	uint16_t *scr=(uint16_t*)screens[0].data;
-#if 0
-	int x, y;
-	char *chrs=" '.~+mM@";
-	ets_printf("\033[1;1H");
-	for (y=0; y<240; y+=4) {
-		for (x=0; x<320; x+=2) {
-			ets_printf("%c", chrs[(scr[x+y*320])>>13]);
-		}
-		ets_printf("\n");
-	}
-#endif
-#if 1
-	spi_lcd_send(scr);
-#endif
+    i80_lcd_send(screens[0].data);
 	//Flip framebuffers
 //	if (scr==screena) screens[0].data=screenb; else screens[0].data=screena;
 }
 
-int16_t lcdpal[256];
+uint16_t lcdpal[256];
 
 void I_SetPalette (int pal)
 {
-	int i, r, g, b, v;
 	int pplump = W_GetNumForName("PLAYPAL");
 	const byte * palette = W_CacheLumpNum(pplump);
 	palette+=pal*(3*256);
-	for (i=0; i<255 ; i++) {
-		v=((palette[0]>>3)<<11)+((palette[1]>>2)<<5)+(palette[2]>>3);
+    for (int i=0; i<255 ; i++) {
+        int v=((palette[0]>>3)<<11)+((palette[1]>>2)<<5)+(palette[2]>>3);
 		lcdpal[i]=(v>>8)+(v<<8);
 //		lcdpal[i]=v;
 		palette += 3;
@@ -155,18 +132,13 @@ void I_SetPalette (int pal)
 }
 
 
-unsigned char *screenbuf;
-
-#define INTERNAL_MEM_FB
-
+void *screen0;
 
 void I_PreInitGraphics(void)
 {
 	lprintf(LO_INFO, "preinitgfx");
-#ifdef INTERNAL_MEM_FB
-	screenbuf=pvPortMallocCaps(320*240, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
-	assert(screenbuf);
-#endif
+    screen0 = heap_caps_malloc(SCREENWIDTH*SCREENHEIGHT, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    assert(screen0);
 }
 
 
@@ -175,12 +147,10 @@ void I_PreInitGraphics(void)
 // Sets the screen resolution
 void I_SetRes(void)
 {
-  int i;
-
 //  I_CalculateRes(SCREENWIDTH, SCREENHEIGHT);
 
   // set first three to standard values
-  for (i=0; i<3; i++) {
+  for (int i=0; i<3; i++) {
     screens[i].width = SCREENWIDTH;
     screens[i].height = SCREENHEIGHT;
     screens[i].byte_pitch = SCREENPITCH;
@@ -195,18 +165,8 @@ void I_SetRes(void)
   screens[4].short_pitch = SCREENPITCH / V_GetModePixelDepth(VID_MODE16);
   screens[4].int_pitch = SCREENPITCH / V_GetModePixelDepth(VID_MODE32);
 
-//Attempt at double-buffering. Does not work.
-//  free(screena);
-//  free(screenb);
-//  screena=malloc(SCREENPITCH*SCREENHEIGHT);
-//  screenb=malloc(SCREENPITCH*SCREENHEIGHT);
-
-
-#ifdef INTERNAL_MEM_FB
-  screens[0].not_on_heap=true;
-  screens[0].data=screenbuf;
-  assert(screens[0].data);
-#endif
+  screens[0].not_on_heap = true;
+  screens[0].data = screen0;
 
 //  spi_lcd_init();
 
@@ -215,8 +175,7 @@ void I_SetRes(void)
 
 void I_InitGraphics(void)
 {
-  char titlebuffer[2048];
-  static int    firsttime=1;
+  static int firsttime=1;
 
   if (firsttime)
   {
@@ -227,19 +186,12 @@ void I_InitGraphics(void)
 
     /* Set the video mode */
     I_UpdateVideoMode();
-
-    /* Initialize the input system */
-    I_InitInputs();
-	gamepadInit();
-
   }
 }
 
 
 void I_UpdateVideoMode(void)
 {
-  int init_flags;
-  int i;
   video_mode_t mode;
 
   lprintf(LO_INFO, "I_UpdateVideoMode: %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
@@ -256,5 +208,4 @@ void I_UpdateVideoMode(void)
   V_AllocScreens();
 
   R_InitBuffer(SCREENWIDTH, SCREENHEIGHT);
-
 }
