@@ -111,6 +111,7 @@ void I_EndDisplay(void)
 void I_FinishUpdate (void)
 {
     i80_lcd_send(screens[0].data);
+    
 	//Flip framebuffers
 //	if (scr==screena) screens[0].data=screenb; else screens[0].data=screena;
 }
