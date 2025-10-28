@@ -180,7 +180,8 @@ typedef struct {
 static FileDesc fds[MAX_N_FILES];
 const char* flash_wads[] = {
     "doom2.wad",
-    "prboom-plus.wad"
+    "prboom-plus.wad",
+    "doom1-cut.wad"
 };
 
 int I_Open(const char *wad, int flags) {
