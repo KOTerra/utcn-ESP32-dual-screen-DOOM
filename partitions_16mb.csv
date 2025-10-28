@@ -1,0 +1,8 @@
+# ESP32-S3-WROOM-1 (16MB Flash) Partition Table
+# Name,   Type,  SubType, Offset,   Size
+nvs,      data,  nvs,     0x9000,   24K
+phy_init, data,  phy,     0xf000,   4K
+factory,  app,   factory, 0x10000,  2M      # Increased for future updates
+spiffs,   data,  spiffs,  0x210000, 256K    # Increased for game assets
+iwad,     66,    6,       0x250000, 12M     # Main WAD files
+pwad,     66,    7,       0xE50000, 1728K   # Extra WAD content
