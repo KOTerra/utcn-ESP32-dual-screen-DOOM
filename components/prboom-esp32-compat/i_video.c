@@ -55,20 +55,18 @@
 
 #include "i80_lcd.h"
 
-
-int use_fullscreen=0;
-int use_doublebuffer=0;
-int usejoystick=0;
+int use_fullscreen = 0;
+int use_doublebuffer = 0;
+int usejoystick = 0;
 int joyleft, joyright, joyup, joydown;
 
-void I_StartTic (void)
+void I_StartTic(void)
 {
 }
 
-
-//static void I_UploadNewPalette(int pal)
+// static void I_UploadNewPalette(int pal)
 //{
-//}
+// }
 
 //////////////////////////////////////////////////////////////////////////////
 // Graphics API
@@ -80,80 +78,74 @@ void I_ShutdownGraphics(void)
 //
 // I_UpdateNoBlit
 //
-void I_UpdateNoBlit (void)
+void I_UpdateNoBlit(void)
 {
 }
 
-
-void I_StartFrame (void)
+void I_StartFrame(void)
 {
 }
-
 
 int I_StartDisplay(void)
 {
-//	spi_lcd_wait_finish();
-    return true;
+  //	spi_lcd_wait_finish();
+  return true;
 }
 
 void I_EndDisplay(void)
 {
 }
 
-
-
-
-
 //
 // I_FinishUpdate
 //
 
-void I_FinishUpdate (void)
+void I_FinishUpdate(void)
 {
-    i80_lcd_send(screens[0].data);
-    //print to terminal for debug
-    printf("Frame sent to LCD\n");
-    printf("%s", screens[0].data);
-	//Flip framebuffers
-//	if (scr==screena) screens[0].data=screenb; else screens[0].data=screena;
+  i80_lcd_send(screens[0].data);
+  // print to terminal for debug
+  lprintf(LO_INFO, "Frame sent to LCD\n");
+  lprintf(LO_INFO, "%s", screens[0].data);
+  // Flip framebuffers
+  //	if (scr==screena) screens[0].data=screenb; else screens[0].data=screena;
 }
 
 uint16_t lcdpal[256];
 
-void I_SetPalette (int pal)
+void I_SetPalette(int pal)
 {
-	int pplump = W_GetNumForName("PLAYPAL");
-	const byte * palette = W_CacheLumpNum(pplump);
-	palette+=pal*(3*256);
-    for (int i=0; i<255 ; i++) {
-        int v=((palette[0]>>3)<<11)+((palette[1]>>2)<<5)+(palette[2]>>3);
-		lcdpal[i]=(v>>8)+(v<<8);
-//		lcdpal[i]=v;
-		palette += 3;
-	}
-	W_UnlockLumpNum(pplump);
+  int pplump = W_GetNumForName("PLAYPAL");
+  const byte *palette = W_CacheLumpNum(pplump);
+  palette += pal * (3 * 256);
+  for (int i = 0; i < 255; i++)
+  {
+    int v = ((palette[0] >> 3) << 11) + ((palette[1] >> 2) << 5) + (palette[2] >> 3);
+    lcdpal[i] = (v >> 8) + (v << 8);
+    //		lcdpal[i]=v;
+    palette += 3;
+  }
+  W_UnlockLumpNum(pplump);
 }
-
 
 void *screen0;
 
 void I_PreInitGraphics(void)
 {
-	lprintf(LO_INFO, "preinitgfx");
-    screen0 = heap_caps_malloc(SCREENWIDTH*SCREENHEIGHT, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    assert(screen0);
+  lprintf(LO_INFO, "preinitgfx");
+  screen0 = heap_caps_malloc(SCREENWIDTH * SCREENHEIGHT, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  assert(screen0);
 }
-
 
 // CPhipps -
 // I_SetRes
 // Sets the screen resolution
 void I_SetRes(void)
 {
-//  I_CalculateRes(SCREENWIDTH, SCREENHEIGHT);
+  //  I_CalculateRes(SCREENWIDTH, SCREENHEIGHT);
 
   // set first three to standard values
-  for (int i=0; i<3; i++) {
+  for (int i = 0; i < 3; i++)
+  {
     screens[i].width = SCREENWIDTH;
     screens[i].height = SCREENHEIGHT;
     screens[i].byte_pitch = SCREENPITCH;
@@ -163,7 +155,7 @@ void I_SetRes(void)
 
   // statusbar
   screens[4].width = SCREENWIDTH;
-  screens[4].height = (ST_SCALED_HEIGHT+1);
+  screens[4].height = (ST_SCALED_HEIGHT + 1);
   screens[4].byte_pitch = SCREENPITCH;
   screens[4].short_pitch = SCREENPITCH / V_GetModePixelDepth(VID_MODE16);
   screens[4].int_pitch = SCREENPITCH / V_GetModePixelDepth(VID_MODE32);
@@ -171,14 +163,14 @@ void I_SetRes(void)
   screens[0].not_on_heap = true;
   screens[0].data = screen0;
 
-//  spi_lcd_init();
+  //  spi_lcd_init();
 
-  lprintf(LO_INFO,"I_SetRes: Using resolution %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
+  lprintf(LO_INFO, "I_SetRes: Using resolution %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
 }
 
 void I_InitGraphics(void)
 {
-  static int firsttime=1;
+  static int firsttime = 1;
 
   if (firsttime)
   {
@@ -192,15 +184,14 @@ void I_InitGraphics(void)
   }
 }
 
-
 void I_UpdateVideoMode(void)
 {
   video_mode_t mode;
 
   lprintf(LO_INFO, "I_UpdateVideoMode: %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
 
-//    mode = VID_MODE16;
-    mode = VID_MODE8;
+  //    mode = VID_MODE16;
+  mode = VID_MODE8;
 
   V_InitMode(mode);
   V_DestroyUnusedTrueColorPalettes();

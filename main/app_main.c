@@ -20,17 +20,18 @@
 #include "i_system.h"
 
 #include "i80_lcd.h"
+#include "lprintf.h"
 
 void doom_task(void *pvParameters)
 {
     char const *argv[] = {
-        "doom", "-cout", "ICWEFDA"
-    };
-    doom_main(sizeof(argv)/sizeof(argv[0]), argv);
+        "doom", "-cout", "ICWEFDA"};
+    doom_main(sizeof(argv) / sizeof(argv[0]), argv);
 }
 
 void app_main()
 {
+    lprintf(LO_INFO,"Starting Doom...\n");
     i80_lcd_init(); // early init to catch errors
     xTaskCreatePinnedToCore(&doom_task, "doom", 22480, NULL, 5, NULL, 0);
 }
